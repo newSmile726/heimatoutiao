@@ -7,26 +7,35 @@
       </template>
     </van-nav-bar>
     <!-- 手机号验证码 -->
-    <van-form class="form" @submit="login">
+    <van-form ref="form" class="form" @submit="login">
       <van-field
         v-model="mobile"
+        name="mobile"
         placeholder="请输入手机号"
-        :rules="[{ required: true, message: '请填写手机号' }]"
+        :rules="mobileRules"
       >
         <template #label>
           <span class="toutiao toutiao-shouji"></span>
         </template>
       </van-field>
-      <van-field
-        v-model="code"
-        placeholder="请输入验证码"
-        :rules="[{ required: true, message: '请填写验证码' }]"
-      >
+      <van-field v-model="code" name="code" placeholder="请输入验证码" :rules="codeRules">
         <template #label>
           <span class="toutiao toutiao-yanzhengma"></span>
         </template>
         <template #right-icon>
-          <van-button class="right-btn" size="mini" round
+          <van-count-down
+          v-if="isShowDoundow"
+          :time="3*1000"
+          format="ss s"
+          @finish='isShowDoundow=false'
+           />
+          <van-button
+          v-else
+          class="right-btn"
+          size="mini"
+           round
+           native-type="button"
+           @click="sendCode"
             >发送验证码</van-button
           >
         </template>
@@ -40,13 +49,19 @@
   </div>
 </template>
 <script>
-import { login } from '@/api/user'
+// 引入请求接口
+import { login, sendCode } from '@/api/user'
+// 引入效验规则
+import { mobileRules, codeRules } from './rules.js'
 export default {
   name: 'Login',
   data () {
     return {
       mobile: '',
-      code: ''
+      code: '',
+      mobileRules,
+      codeRules,
+      isShowDoundow: false
     }
   },
   created () {},
@@ -57,8 +72,54 @@ export default {
       this.$router.back()
     },
     async login () {
-      const res = await login(this.mobile, this.code)
-      console.log(res)
+      this.$toast.loading({
+        message: '加载中...',
+        forbidClick: true
+      })
+      try {
+        const res = await login(this.mobile, this.code)
+        this.$store.commit('setUser', res.data.data)
+        this.$router.push('/profile')
+        this.$toast.success('登录成功')
+      } catch (e) {
+        // this.$toast.fail('登录失败')
+        const status = e.response.status
+        let message = '登录错误，请刷新~'
+        if (status === 400) {
+          message = e.response.data.message
+        }
+        this.$toast.fail(message)
+        // status === 400 ? this.$toast.fail(e.response.data.message) : this.$toast.fail('登录错误，请刷新~')
+        // switch (status) {
+        //   case 400:
+        //     this.$toast.fail(e.response.data.message)
+        //     break
+        //   case 507:
+        //     this.$toast.fail('登录错误，请刷新重试')
+        //     break
+        //   default:
+        //     this.$toast.fail('登录错误，请刷新~')
+        //     break
+        // }
+      }
+    },
+    // 方式验证码
+    async sendCode () {
+      try {
+        // 验证手机号
+        await this.$refs.form.validate('mobile')
+        await sendCode(this.mobile)
+        this.isShowDoundow = true
+      } catch (error) {
+        if (!error.response) {
+          this.$toast.fail('手机号不存在或格式不正确')
+        } else {
+          const status = error.response.status
+          if (status === 404 || status === 429) {
+            this.$toast.fail(error.response.data.message)
+          }
+        }
+      }
     }
   }
 }
