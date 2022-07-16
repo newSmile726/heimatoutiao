@@ -1,1 +1,2 @@
-export * from '@/api/user.js'
+export * from './user'
+export * from './channel'
