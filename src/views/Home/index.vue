@@ -15,22 +15,25 @@
         <ArticleList :id="item.id"></ArticleList>
       </van-tab>
 
-      <span class="toutiao toutiao-gengduo"></span>
+      <span class="toutiao toutiao-gengduo" @click="ispopup"></span>
     </van-tabs>
+    <!-- 弹出层 -->
+    <Popupeditbox ref="popup" :mychennels='chennels'></Popupeditbox>
   </div>
 </template>
 <script>
 import { getMychennels } from '@/api'
 import ArticleList from './componets/ArticleList.vue'
+import Popupeditbox from './componets/Popupeditbox.vue'
 export default {
   name: 'Home',
   data () {
     return {
-      active: 2,
+      active: 0,
       chennels: []
     }
   },
-  components: { ArticleList },
+  components: { ArticleList, Popupeditbox },
   created () {
     this.getMychennels()
   },
@@ -44,6 +47,9 @@ export default {
       } catch (error) {
         this.$toast.fail('获取频道列表失败，请重试')
       }
+    },
+    ispopup () {
+      this.$refs.popup.isShow = true
     }
   }
 }
@@ -110,6 +116,7 @@ export default {
   text-align: center;
   opacity: 0.6;
   border-bottom: 1px solid #eee;
+  z-index: 99;
 
   &::after {
     content: '';
@@ -121,5 +128,25 @@ export default {
     width: 1px;
     background-image: url('~@/assets/images/gradient-gray-line.png');
   }
+}
+// 头部固定的样式
+.navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+}
+:deep(.van-tabs__wrap) {
+  position: sticky;
+  top: 46px;
+  left: 0;
+  z-index: 99;
+}
+.toutiao-gengduo {
+  position: fixed;
+  top: 46px;
+}
+:deep(.van-tabs__content) {
+  max-height: calc(100vh - 46px - 41px - 50px);
+  overflow: auto;
 }
 </style>
