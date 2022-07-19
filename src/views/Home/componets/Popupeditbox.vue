@@ -11,16 +11,26 @@
       <div class="popupMain">
         <div class="my-channel">
           <van-cell title="我的频道">
-            <van-button size="mini" round class="edit-btn">编辑</van-button>
+            <van-button
+              @click="isEdit = !isEdit"
+              size="mini"
+              round
+              class="edit-btn"
+              >{{ isEdit ? '完成' : '编辑' }}</van-button
+            >
           </van-cell>
           <!-- 我的频道 -->
           <van-grid :border="false" gutter="5px">
             <van-grid-item
-              v-for="item in mychennels"
+              v-for="(item,index) in mychennels"
               :key="item.id"
               :text="item.name"
+              :class="{'active-pannel':item.name==='推荐'}"
+              @click="delChennels(item,index)"
             >
-              <template #icon><van-icon name="cross" /></template>
+              <template #icon
+                ><van-icon v-show="isEdit && item.name !== '推荐'" name="cross"
+              /></template>
             </van-grid-item>
           </van-grid>
         </div>
@@ -28,7 +38,13 @@
         <div class="recommend-channel">
           <van-cell title="推荐频道"> </van-cell>
           <van-grid :border="false" gutter="5px">
-            <van-grid-item v-for="item in newChannels" :key="item.id" :text="item.name" icon="plus"></van-grid-item>
+            <van-grid-item
+              v-for="item in newChannels"
+              :key="item.id"
+              :text="item.name"
+              icon="plus"
+              @click="addChennels(item)"
+            ></van-grid-item>
           </van-grid>
         </div>
       </div>
@@ -43,7 +59,8 @@ export default {
   data () {
     return {
       isShow: false,
-      Allchennels: []
+      Allchennels: [],
+      isEdit: false
     }
   },
   created () {
@@ -66,12 +83,29 @@ export default {
     async getAllchennels () {
       const { data } = await getAllchennels()
       this.Allchennels = data.data.channels
+    },
+    delChennels (chennel, index) {
+      if (this.isEdit && chennel.name !== '推荐') {
+        return this.$emit('delmyChennels', chennel.id)
+      }
+      if (!this.isEdit) {
+        this.isShow = false
+        this.$emit('changeActive', index)
+      }
+    },
+    addChennels (chennel) {
+      this.$emit('add-chennels', { ...chennel })
     }
   }
 }
 </script>
 
 <style scoped lang="less">
+.active-pannel {
+  :deep(.van-grid-item__text) {
+    color: red;
+  }
+}
 .popupMain {
   padding-top: 50px;
   //按钮样式

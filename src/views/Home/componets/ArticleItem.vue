@@ -28,8 +28,8 @@
         <!-- 图片区域 -->
         <div class="imgs">
             <van-image
-        v-for="item in articleList.cover.images"
-        :key="item"
+        v-for="(item,index) in articleList.cover.images"
+        :key="index"
           width="3rem"
           height="2rem"
           :src="item"

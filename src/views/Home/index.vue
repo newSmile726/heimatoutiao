@@ -18,11 +18,23 @@
       <span class="toutiao toutiao-gengduo" @click="ispopup"></span>
     </van-tabs>
     <!-- 弹出层 -->
-    <Popupeditbox ref="popup" :mychennels='chennels'></Popupeditbox>
+    <Popupeditbox
+      ref="popup"
+      :mychennels="chennels"
+      @delmyChennels="delChennel"
+      @changeActive="activeFn"
+      @add-chennels="addMychennels"
+    ></Popupeditbox>
   </div>
 </template>
 <script>
-import { getMychennels } from '@/api'
+import {
+  getMychennels,
+  getMychennelsCal,
+  setMychennelsCal,
+  delMychennel,
+  addMychennel
+} from '@/api'
 import ArticleList from './componets/ArticleList.vue'
 import Popupeditbox from './componets/Popupeditbox.vue'
 export default {
@@ -38,18 +50,64 @@ export default {
     this.getMychennels()
   },
   mounted () {},
-  computed: {},
+  computed: {
+    isLogin () {
+      return !!this.$store.state.user.token
+    }
+  },
   methods: {
     async getMychennels () {
       try {
-        const { data } = await getMychennels()
-        this.chennels = data.data.channels
+        // 如果是离线状态就获取本地的数据 如果是登录状态就发送请求
+
+        if (!this.isLogin) {
+          const mychennels = getMychennelsCal()
+
+          if (mychennels) {
+            this.chennels = mychennels
+          } else {
+            const { data } = await getMychennels()
+            this.chennels = data.data.channels
+          }
+        } else {
+          const { data } = await getMychennels()
+          this.chennels = data.data.channels
+        }
       } catch (error) {
         this.$toast.fail('获取频道列表失败，请重试')
       }
     },
     ispopup () {
       this.$refs.popup.isShow = true
+    },
+    async delChennel (id) {
+      this.chennels = this.chennels.filter((item) => item.id !== id)
+      if (!this.isLogin) {
+        setMychennelsCal(this.chennels)
+      } else {
+        try {
+          await delMychennel(id)
+        } catch (error) {
+          return this.$toast.fail('删除频道失败')
+        }
+      }
+      this.$toast.success('删除频道成功')
+    },
+    activeFn (active) {
+      this.active = active
+    },
+    async addMychennels (chennel) {
+      this.chennels.push(chennel)
+      if (!this.isLogin) {
+        setMychennelsCal(this.chennels)
+      } else {
+        try {
+          await addMychennel(chennel.id, this.chennels.length)
+        } catch (error) {
+          return this.$toast.fail('添加频道失败')
+        }
+      }
+      this.$toast.success('添加频道成功')
     }
   }
 }
