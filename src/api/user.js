@@ -33,3 +33,28 @@ export const getUserInMy = () => {
     // headers: { Authorization: `Bearer ${store.state.user.token}` }
   })
 }
+/**
+ *  关注用户
+ * @param {string} id  用户的id
+ * @returns  promise
+ */
+export const followUsers = (id) => {
+  return request({
+    url: '/v1_0/user/followings',
+    method: 'POST',
+    data: {
+      target: id
+    }
+  })
+}
+/**
+ *  取消关注用户
+ * @param {string} id 用户id
+ * @returns  promise
+ */
+export const cancelFollowing = (id) => {
+  return request({
+    url: `/v1_0/user/followings/${id}`,
+    method: 'DELETE'
+  })
+}

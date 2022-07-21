@@ -25,3 +25,54 @@ export const gatArticleDetails = (articleId) => {
     url: `/v1_0/articles/${articleId}`
   })
 }
+/**
+ *  收藏文章
+ * @param {string} id 文章的id
+ * @returns  promise
+ */
+export const CollectArticles = (id) => {
+  return request({
+    url: '/v1_0/article/collections',
+    method: 'POST',
+    data: {
+      target: id
+    }
+  })
+}
+/**
+ * 取消收藏文章
+ * @param {string} id  文章的id
+ * @returns  promise
+ */
+export const CancelFavorites = (id) => {
+  return request({
+    url: `/v1_0/article/collections/${id}`,
+    method: 'DELETE'
+  })
+}
+
+/**
+ *  点赞
+ * @param {String} id 文章的id
+ * @returns  promise
+ */
+export const GiveTheThumbsUp = (id) => {
+  return request({
+    url: '/v1_0/article/likings',
+    method: 'POST',
+    data: {
+      target: id
+    }
+  })
+}
+/**
+ *  取消点赞
+ * @param {string} id 文章的id
+ * @returns  promise
+ */
+export const CancelLike = (id) => {
+  return request({
+    url: `/v1_0/article/likings/${id}`,
+    method: 'DELETE'
+  })
+}
