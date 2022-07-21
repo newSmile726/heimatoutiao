@@ -13,6 +13,7 @@
           v-for="item in articles"
           :key="item.art_id"
           :articleList="item"
+          @click.native="goDetail(item.art_id)"
         ></ArticleItem>
       </van-list>
     </van-pull-refresh>
@@ -82,6 +83,12 @@ export default {
         this.loading = false
         this.refreshLoading = false
       }
+    },
+    goDetail (id) {
+      this.$router.push({
+        name: 'detail',
+        params: { id }
+      })
     }
   }
 }

@@ -15,3 +15,13 @@ export const gatArticleList = (channelId, timestamp) => {
     }
   })
 }
+/**
+ * 获取文字详情
+ * @param {number} articleId 当前文字id
+ * @returns  promise
+ */
+export const gatArticleDetails = (articleId) => {
+  return request({
+    url: `/v1_0/articles/${articleId}`
+  })
+}
