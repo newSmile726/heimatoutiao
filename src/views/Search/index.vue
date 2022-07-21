@@ -12,7 +12,7 @@
         background="#3396fc"
       />
     </form>
-    <component :is="ChooseComponent" :keywords='keywords'></component>
+    <component :is="ChooseComponent" :keywords='keywords' :isShowSearchResult='isShowSearchResult'></component>
   </div>
 </template>
 <script>
@@ -48,7 +48,7 @@ export default {
   methods: {
     onSearch () {
       this.isShowSearchResult = true
-      console.log('正在搜索')
+      // console.log('正在搜索')
     },
     onCancel () {
       this.$router.go(-1)

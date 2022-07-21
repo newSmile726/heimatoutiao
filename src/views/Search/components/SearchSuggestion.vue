@@ -1,6 +1,6 @@
 <template>
   <div>
-    <van-cell v-for="(item, index) in highlighData" :key="index">
+    <van-cell v-for="(item, index) in highlighData" :key="index" @click="resultsFn">
       <template #icon>
         <van-icon name="search" class="search-icon" />
       </template>
@@ -46,6 +46,9 @@ export default {
         this.$toast.fail('没有搜索建议')
       }
       this.suggestion = res.data.data.options.filter(Boolean)
+    },
+    resultsFn () {
+      this.$parent.isShowSearchResult = true
     }
   }
 }
