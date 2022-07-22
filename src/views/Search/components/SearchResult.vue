@@ -6,7 +6,7 @@
         finished-text="没有更多了"
         @load="onLoad"
       >
-        <van-cell v-for="item in SearchResult" :key="item.id">
+        <van-cell v-for="item in SearchResult" :key="item.id" @click="goDetail(item)">
           <template #title>
             <span v-html="item.title"></span>
           </template>
@@ -64,6 +64,13 @@ export default {
       if (this.SearchResult.length === data.data.total_count) {
         this.finished = true
       }
+    },
+    goDetail (item) {
+      const id = item.art_id
+      this.$router.push({
+        name: 'detail',
+        params: { id }
+      })
     }
   }
 }

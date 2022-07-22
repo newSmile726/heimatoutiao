@@ -40,6 +40,8 @@
     <!-- 文章内容区域 -->
     <div class="message-size markdown-body" v-html="articleList.content"></div>
     <van-divider>正文结束</van-divider>
+    <!-- 评论区 -->
+    <Comments :newcontent="newcontent"></Comments>
     <!-- 底部导航标签 -->
     <div class="footer-bar">
       <div>
@@ -48,7 +50,7 @@
         >
       </div>
       <div class="icons-img">
-        <van-icon name="comment-o" badge="9" />
+        <van-icon name="comment-o" :badge="articleList.comm_count" />
         <van-icon
           name="star-o"
           v-if="!articleList.is_collected"
@@ -74,24 +76,24 @@
         <van-icon name="share" @click="showShare = !showShare" />
       </div>
       <!-- 评论 -->
-      <van-popup v-model="Plshow" position="bottom" :style="{ height: '18%' }">
+      <van-popup v-model="Plshow" position="bottom" class="popUp">
         <van-field
           v-model="messageInfo"
           rows="2"
           type="textarea"
           maxlength="50"
-          :border="false"
-          clearable
           placeholder="请输入留言"
           show-word-limit
+          @input="inputFn"
         >
           <template #extra>
-            <div
-              class="release"
-              :class="{ release1: messageInfo.length != 0 }"
+            <van-button
+              size="small"
+              class="submitBtn"
+              :disabled='isdisabeld'
+              @click="Submit"
+              >发布</van-button
             >
-              发布
-            </div>
           </template>
         </van-field>
       </van-popup>
@@ -107,6 +109,7 @@
 <script>
 import dayjs from '@/utils/dayjs'
 import './github-markdown.css'
+import Comments from './CommentsList/index.vue'
 import {
   gatArticleDetails,
   followUsers,
@@ -114,18 +117,22 @@ import {
   CollectArticles,
   CancelFavorites,
   GiveTheThumbsUp,
-  CancelLike
+  CancelLike,
+  CommentOnTheArticle
 } from '@/api'
 
 export default {
   name: 'Detail',
+  components: { Comments },
   data () {
     return {
-      articleList: {},
-      messageInfo: '',
-      Plshow: false,
-      loading: false,
-      showShare: false,
+      articleList: {}, // 文章内容
+      messageInfo: '', // 评论弹出框内容
+      newcontent: {}, // 评论内容
+      isdisabeld: true, // 发布按钮禁用状态
+      Plshow: false, // 发布弹出层状态
+      loading: false, // 关注用户 加载中状态
+      showShare: false, // 分析弹窗状态
       options: [
         [
           { name: '微信', icon: 'wechat' },
@@ -143,8 +150,7 @@ export default {
     }
   },
   created () {
-    this.gatArticleDetails()
-    // console.log(this.$route.params.id)
+    this.gatArticleDetails() // 获取文章全部内容
   },
   computed: {
     texts () {
@@ -199,16 +205,40 @@ export default {
     async CancelLike () {
       await CancelLike(this.articleList.art_id)
       this.gatArticleDetails()
+    },
+    // 改变发布按钮状态
+    inputFn () {
+      this.isdisabeld = false
+      if (this.messageInfo.length === 0) {
+        this.isdisabeld = true
+      }
+    },
+    // 发布评论
+    async Submit () {
+      try {
+        const id = this.$route.params.id
+        const newmessageInfo = await CommentOnTheArticle(id, this.messageInfo)
+        this.messageInfo = '' // 清空输入框
+        this.isdisabeld = true // 禁用按钮状态
+        // console.log(newmessageInfo)
+        this.newcontent = newmessageInfo.data.data
+        this.$toast.success('发布成功')
+        this.Plshow = false // 收起弹出层
+      } catch (error) {
+        this.$$toast.fail('发布失败')
+      }
     }
   }
 }
 </script>
 <style scoped lang="less">
+//去除边框留白
 .detail-css {
   position: relative;
   overflow-x: hidden;
   padding-bottom: 50px;
 }
+//顶部标题css样式
 :deep(.van-nav-bar) {
   background-color: #3296fa;
 }
@@ -218,6 +248,7 @@ export default {
 :deep(.van-icon) {
   color: #fff;
 }
+//文章标题css样式
 .article-titles {
   font-size: 0.53333rem;
   padding: 8px 0.42667rem;
@@ -227,6 +258,7 @@ export default {
     font-size: 20px;
   }
 }
+//作者信息区域css样式
 .user-message {
   background-color: #fff;
   padding: 0 16px;
@@ -257,10 +289,12 @@ export default {
     background-color: #fff;
   }
 }
+//文章内容css样式
 .message-size {
   font-size: 12px;
   padding: 10px 10px;
 }
+//底部导航标签css样式
 .footer-bar {
   display: flex;
   width: 375px;
@@ -291,33 +325,29 @@ export default {
     }
   }
 }
-.release {
-  width: 40px;
-  height: 44px;
-  text-align: center;
-  line-height: 44px;
-  padding-top: 31px;
-  margin-right: -6px;
-  color: #b5d1ec;
-}
-.release1 {
-
-  margin-left: -8px;
-
-  color: #6ba3d8;
-}
-:deep(.van-field__control) {
-  background-color: #f5f7f9;
-  width: 300px;
-  height: 90px;
-  margin-top: 5px;
-}
-:deep(.van-field__word-limit) {
-  margin-top: -30px;
-  margin-right: 40px;
-}
-:deep(.van-field__control) {
-  padding-left: 10px;
-  padding-top: 10px;
+//评论弹出层css样式
+.popUp {
+  height: 120px;
+  :deep(.van-field__value) {
+    margin-top: 7px;
+    width: 298px;
+    height: 88px;
+    background-color: #f5f7f9;
+    .van-field__control {
+      padding: 10px 16px 0;
+    }
+    .van-field__word-limit {
+      //  padding: 0 10px;
+      width: 95%;
+    }
+  }
+  .submitBtn {
+    margin-top: 34px;
+    margin-right: -0.23333rem;
+    margin-left: 0.23333rem;
+    color: #6ba3d8;
+    border: unset;
+    font-size: 0.37333rem;
+  }
 }
 </style>
