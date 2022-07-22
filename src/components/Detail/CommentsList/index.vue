@@ -98,13 +98,7 @@
 
         <template #default>
           <div class="txt">
-             <van-icon
-              v-if="item.is_liking"
-              name="good-job"
-              color="#3296fa"
-              @click="onLikeComments(item.com_id)"
-            />
-            <van-icon name="good-job-o" color="#5d5d5e" v-else @click="LikeComments(item.com_id)" />{{
+            <van-icon name="good-job-o" color="#5d5d5e"/>{{
               aplyList.like_count === 0 ? '赞' : aplyList.like_count
             }}
           </div>
@@ -249,14 +243,12 @@ export default {
       await LikeComments(id)
       this.CommentListApi() // 文章内容区域更新
       this.CommentList('C', id)
-      this.Submit()
     },
     // 取消对文章或者评论点赞
     async onLikeComments (id) {
       await onLikeComments(id)
       this.CommentListApi() // 文章内容区域更新
       this.CommentList('C', id)
-      this.Submit()
     }
   }
 }
