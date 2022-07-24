@@ -64,7 +64,7 @@
         />
         <van-icon
           name="good-job-o"
-          v-if="articleList.attitude == -1 || articleList.attitude == 0"
+          v-if="articleList.attitude == 0"
           @click="GiveTheThumbsUp()"
         />
         <van-icon
@@ -90,7 +90,7 @@
             <van-button
               size="small"
               class="submitBtn"
-              :disabled='isdisabeld'
+              :disabled="isdisabeld"
               @click="Submit"
               >发布</van-button
             >
@@ -110,6 +110,7 @@
 import dayjs from '@/utils/dayjs'
 import './github-markdown.css'
 import Comments from './CommentsList/index.vue'
+import { ImagePreview } from 'vant'
 import {
   gatArticleDetails,
   followUsers,
@@ -159,6 +160,18 @@ export default {
       return `${time}`
     }
   },
+  updated () {
+    // 点击预览图片  上面引入 ImagePreview
+    const imgs = document.querySelectorAll('img')
+    // console.log(imgs)
+    const arr = []
+    imgs.forEach((item) => arr.push(item.src))
+    // console.log(arr)
+    imgs.forEach((item, index) =>
+      item.addEventListener('click', () => {
+        ImagePreview({ images: arr, startPosition: index })
+      }))
+  },
   methods: {
     onClickLeft () {
       this.$router.back()
@@ -174,37 +187,40 @@ export default {
       this.loading = true
       // console.log(this.articleList.is_followed)
       await followUsers(this.articleList.aut_id)
-      this.gatArticleDetails()
+      this.articleList.is_followed = !this.articleList.is_followed
       this.loading = false
     },
     // 取消关注用户
     async cancelFollowing () {
       this.loading = true
       await cancelFollowing(this.articleList.aut_id)
-      this.gatArticleDetails()
+      this.articleList.is_followed = !this.articleList.is_followed
       this.loading = false
     },
     // 收藏文章
     async CollectArticles () {
       await CollectArticles(this.articleList.art_id)
-      this.gatArticleDetails()
+      this.articleList.is_collected = !this.articleList.is_collected
+      // this.gatArticleDetails()
       this.$toast.success('操作成功')
     },
     // 取消收藏
     async CancelFavorites () {
       await CancelFavorites(this.articleList.art_id)
-      this.gatArticleDetails()
+      this.articleList.is_collected = !this.articleList.is_collected
       this.$toast.success('操作成功')
     },
     // 点赞
     async GiveTheThumbsUp () {
       await GiveTheThumbsUp(this.articleList.art_id)
-      this.gatArticleDetails()
+      this.articleList.attitude = 1
+      // this.gatArticleDetails()
     },
     // 取消点赞
     async CancelLike () {
       await CancelLike(this.articleList.art_id)
-      this.gatArticleDetails()
+      this.articleList.attitude = 0
+      // this.gatArticleDetails()
     },
     // 改变发布按钮状态
     inputFn () {

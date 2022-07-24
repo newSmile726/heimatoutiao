@@ -4,8 +4,8 @@
     <van-cell-group>
       <van-cell
         :title="item.aut_name"
-        v-for="item in comments"
-        :key="item.com_id"
+        v-for="(item,index) in comments"
+        :key="index"
       >
         <template #icon>
           <van-image class="touxiang-img" round :src="item.aut_photo" />
@@ -17,13 +17,13 @@
               v-if="item.is_liking"
               name="good-job"
               color="#3296fa"
-              @click="onLikeComments(item.com_id)"
+              @click="onLikeComments(item)"
             />
             <van-icon
               name="good-job-o"
               color="#5d5d5e"
               v-else
-              @click="LikeComments(item.com_id)"
+              @click="LikeComments(item)"
             />{{ item.like_count === 0 ? '赞' : item.like_count }}
           </div>
         </template>
@@ -37,7 +37,7 @@
               size="mini"
               round
               type="default"
-              @click="showFn(item.com_id)"
+              @click="showFn(item)"
               >回复{{ item.reply_count }}</van-button
             >
           </div>
@@ -55,10 +55,42 @@
       <van-nav-bar title="暂无回复"> </van-nav-bar>
       <van-cell
         ref="popups"
-        :title="item.aut_name"
-        v-for="item in results"
-        :key="item.com_id"
+        :title="results.aut_name"
       >
+        <template #icon>
+          <van-image class="touxiang-img" round :src="results.aut_photo" />
+        </template>
+
+        <template #default>
+          <div class="txt">
+            <van-icon
+              v-if="results.is_liking"
+              name="good-job"
+              color="#3296fa"
+              @click="onLikeComments(results)"
+            />
+            <van-icon
+              v-else
+              name="good-job-o"
+              color="#5d5d5e"
+              @click="LikeComments(results)"
+            />{{ results.like_count === 0 ? '赞' : results.like_count }}
+          </div>
+        </template>
+
+        <template #label>
+          <p class="message-Info">{{ results.content }}</p>
+          <div class="message-footers">
+            <p class="time">{{ comment(results.pubdate) }}</p>
+            <van-button class="btn" size="mini" round type="default"
+              >回复{{ results.reply_count }}</van-button
+            >
+          </div>
+        </template>
+      </van-cell>
+      <div class="spaninfo">全部回复</div>
+      <van-cell :title="item.aut_name"  v-for='item in resultss'
+        :key="item.end_id">
         <template #icon>
           <van-image class="touxiang-img" round :src="item.aut_photo" />
         </template>
@@ -69,13 +101,13 @@
               v-if="item.is_liking"
               name="good-job"
               color="#3296fa"
-              @click="onLikeComments(item.com_id)"
+              @click="onLikeComments(item)"
             />
             <van-icon
-            v-else
               name="good-job-o"
+              v-else
               color="#5d5d5e"
-              @click="LikeComments(item.com_id)"
+              @click="LikeComments(item)"
             />{{ item.like_count === 0 ? '赞' : item.like_count }}
           </div>
         </template>
@@ -86,30 +118,6 @@
             <p class="time">{{ comment(item.pubdate) }}</p>
             <van-button class="btn" size="mini" round type="default"
               >回复{{ item.reply_count }}</van-button
-            >
-          </div>
-        </template>
-      </van-cell>
-      <div class="spaninfo">全部回复</div>
-      <van-cell :title="aplyList.aut_name">
-        <template #icon>
-          <van-image class="touxiang-img" round :src="aplyList.aut_photo" />
-        </template>
-
-        <template #default>
-          <div class="txt">
-            <van-icon name="good-job-o" color="#5d5d5e"/>{{
-              aplyList.like_count === 0 ? '赞' : aplyList.like_count
-            }}
-          </div>
-        </template>
-
-        <template #label>
-          <p class="message-Info">{{ aplyList.content }}</p>
-          <div class="message-footers">
-            <p class="time">{{ comment(aplyList.pubdate) }}</p>
-            <van-button class="btn" size="mini" round type="default"
-              >回复{{ aplyList.reply_count }}</van-button
             >
           </div>
         </template>
@@ -162,10 +170,10 @@ export default {
       isdisabeld: true, // 发布按钮禁用状态
       aplyshow: false,
       comid: '', // 回复弹层按钮
-      aplyList: {}, // 回复内容
       show: false,
       comments: [], // 评论列表
-      results: []
+      results: {},
+      resultss: [] // 回复数据列表
     }
   },
   props: {
@@ -193,11 +201,14 @@ export default {
     }
   },
   methods: {
-    // 控制弹层
-    showFn (id) {
+    // 控制弹层  获取回复页面数据
+    async showFn (item) {
       this.show = true
-      this.CommentList(id)
-      this.comid = id
+      this.results = item // 当前评论
+      const res = await CommentListApi('c', item.com_id)
+      // 获取新回复数据
+      this.resultss = res.data.data.results
+      this.comid = item.com_id
     },
     // 获取评论列表
     async CommentListApi () {
@@ -205,12 +216,6 @@ export default {
       const res = await CommentListApi('a', id)
       // console.log(res)
       this.comments = res.data.data.results
-    },
-    // 获取回复页面数据
-    async CommentList (id) {
-      const res = await CommentListApi('c', id)
-      console.log(res)
-      this.results = res.data.data.results
     },
     // 改变发布按钮状态
     inputFn () {
@@ -221,34 +226,33 @@ export default {
     },
     // 发布回复评论
     async Submit () {
-      const artid = this.$router.currentRoute.params.id
-      const { data } = await CommentOnTheArticle(
-        this.comid,
-        this.aplyvalue,
-        artid
-      )
       try {
+        const artid = this.$router.currentRoute.params.id
+        const { data } = await CommentOnTheArticle(
+          this.comid,
+          this.aplyvalue,
+          artid
+        )
         this.aplyvalue = '' // 清空输入框
         this.isdisabeld = true // 禁用按钮状态
-        // console.log(data.data.new_obj)
-        this.aplyList = data.data.new_obj
+        // console.log(data.data.new_obj)  追加到回复列表数组
+        const aplyList = data.data.new_obj
+        this.resultss.push(aplyList)
         this.$toast.success('发布成功')
-        this.Plshow = false // 收起弹出层
+        this.aplyshow = false // 收起弹出层
       } catch (error) {
         this.$toast.fail('发布失败')
       }
     },
     // 对文章或者评论点赞
-    async LikeComments (id) {
-      await LikeComments(id)
-      this.CommentListApi() // 文章内容区域更新
-      this.CommentList('C', id)
+    async LikeComments (item) {
+      await LikeComments(item.com_id)
+      item.is_liking = !item.is_liking
     },
     // 取消对文章或者评论点赞
-    async onLikeComments (id) {
-      await onLikeComments(id)
-      this.CommentListApi() // 文章内容区域更新
-      this.CommentList('C', id)
+    async onLikeComments (item) {
+      await onLikeComments(item.com_id)
+      item.is_liking = !item.is_liking
     }
   }
 }
