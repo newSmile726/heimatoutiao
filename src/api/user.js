@@ -58,3 +58,12 @@ export const cancelFollowing = (id) => {
     method: 'DELETE'
   })
 }
+/**
+ *  获取用户个人资料
+ * @returns  promise
+ */
+export const getPersonalData = () => {
+  return request({
+    url: '/v1_0/user/profile'
+  })
+}
